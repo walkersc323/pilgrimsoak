@@ -152,7 +152,7 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- SCORECARD TABLE (HIGH CONTRAST GREEN/YELLOW BOLD SCORES + STROKE ASTERISK) ---
+# --- SCORECARD TABLE (HIGH CONTRAST GREEN/YELLOW BOLD SCORES + RED STROKE DOT) ---
 rows_html = ""
 for _, row in df.iterrows():
     h = int(row["Hole"])
@@ -162,16 +162,15 @@ for _, row in df.iterrows():
     g1 = int(row[p1])
     g2 = int(row[p2])
 
-    # Check strokes per hole
     s1 = 1 if hcp <= p1_hcp else 0
     s2 = 1 if hcp <= p2_hcp else 0
 
-    # Red asterisk indicator for player stroke holes
-    p1_ast = "<span style='color:#FF4B4B; font-weight:bold;'>*</span>" if s1 > 0 else ""
-    p2_ast = "<span style='color:#FF4B4B; font-weight:bold;'>*</span>" if s2 > 0 else ""
+    # Solid red dot indicator for stroke holes
+    p1_dot = "<span style='color:#FF4B4B; font-size:12px;'> ●</span>" if s1 > 0 else ""
+    p2_dot = "<span style='color:#FF4B4B; font-size:12px;'> ●</span>" if s2 > 0 else ""
 
-    p1_val_str = f"{g1}{p1_ast}" if g1 > 0 else "-"
-    p2_val_str = f"{g2}{p2_ast}" if g2 > 0 else "-"
+    p1_val_str = f"{g1}{p1_dot}" if g1 > 0 else "-"
+    p2_val_str = f"{g2}{p2_dot}" if g2 > 0 else "-"
 
     p1_cell = f"<span style='font-size:17px; font-weight:bold;'>{p1_val_str}</span>"
     p2_cell = f"<span style='font-size:17px; font-weight:bold;'>{p2_val_str}</span>"
