@@ -154,26 +154,26 @@ st.divider()
 
 # --- CUSTOM HTML SCORECARD TABLE (STRICT CENTER ALIGNMENT) ---
 def render_custom_table(data_df):
-    html = f"""
+    html = """
     <style>
-        .custom-scorecard {{
+        .custom-scorecard {
             width: 100%;
             border-collapse: collapse;
             font-family: sans-serif;
             margin-top: 10px;
-        }}
-        .custom-scorecard th {{
+        }
+        .custom-scorecard th {
             text-align: center !important;
             padding: 8px;
             border-bottom: 2px solid #555;
             font-size: 14px;
-        }}
-        .custom-scorecard td {{
+        }
+        .custom-scorecard td {
             text-align: center !important;
             padding: 8px;
             border-bottom: 1px solid #333;
             font-size: 14px;
-        }}
+        }
     </style>
     <table class="custom-scorecard">
         <thead>
@@ -182,12 +182,12 @@ def render_custom_table(data_df):
                 <th>Yards</th>
                 <th>Par</th>
                 <th>Hcp</th>
-                <th>{p1}</th>
-                <th>{p2}</th>
+                <th>{}</th>
+                <th>{}</th>
             </tr>
         </thead>
         <tbody>
-    """
+    """.format(p1, p2)
 
     for _, row in data_df.iterrows():
         h = int(row["Hole"])
@@ -231,3 +231,25 @@ def render_custom_table(data_df):
 
     html += "</tbody></table>"
     return html
+
+with st.expander("📋 View Full Scorecard Table", expanded=False):
+    st.html(render_custom_table(df))
+
+st.divider()
+
+# --- PLAYER SETUP & HANDICAPS (AT BOTTOM) ---
+with st.expander("⚙️ Player Setup & Handicaps", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        new_p1_name = st.text_input("Player 1 Name", value=p1)
+        new_p1_hcp = st.number_input(f"{new_p1_name} Handicap", value=p1_hcp, min_value=0, max_value=36, step=1)
+    with col2:
+        new_p2_name = st.text_input("Player 2 Name", value=p2)
+        new_p2_hcp = st.number_input(f"{new_p2_name} Handicap", value=p2_hcp, min_value=0, max_value=36, step=1)
+
+    if new_p1_name != p1 or new_p2_name != p2 or new_p1_hcp != p1_hcp or new_p2_hcp != p2_hcp:
+        st.session_state.p1_name = new_p1_name
+        st.session_state.p1_hcp = new_p1_hcp
+        st.session_state.p2_name = new_p2_name
+        st.session_state.p2_hcp = new_p2_hcp
+        st.rerun()
