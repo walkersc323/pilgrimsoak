@@ -1,23 +1,23 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Pilgrim's Oak - Walker Cup Match", layout="centered")
+st.set_page_config(page_title="Pilgrim's Oak Round", layout="centered")
 
-st.title("⛳ Pilgrim's Oak - Walker Cup Match")
+# 1. Smaller Page Title
+st.markdown("### ⛳ Pilgrim's Oak Round")
 st.caption("White / Gold Tees • Par 72 • 5,828 Yards")
 
-# --- MATCH SETUP ---
-col1, col2 = st.columns(2)
-with col1:
-    p1 = st.text_input("Player 1 Name", value="ATN")
-    p1_hcp = st.number_input(f"{p1} Handicap Strokes", value=12, min_value=0, max_value=36, step=1)
-with col2:
-    p2 = st.text_input("Player 2 Name", value="Player 2")
-    p2_hcp = st.number_input(f"{p2} Handicap Strokes", value=0, min_value=0, max_value=36, step=1)
+# --- MATCH SETUP (COLLAPSIBLE / TOP BAR) ---
+with st.expander("⚙️ Player Setup & Handicaps", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        p1 = st.text_input("Player 1 Name", value="ATN")
+        p1_hcp = st.number_input(f"{p1} Handicap", value=12, min_value=0, max_value=36, step=1)
+    with col2:
+        p2 = st.text_input("Player 2 Name", value="Player 2")
+        p2_hcp = st.number_input(f"{p2} Handicap", value=0, min_value=0, max_value=36, step=1)
 
-st.divider()
-
-# --- PILGRIM'S OAK WHITE/GOLD SCORECARD ---
+# --- COURSE DATA ---
 COURSE_DATA = {
     "Hole": list(range(1, 19)),
     "Yards": [378, 327, 367, 108, 329, 470, 354, 138, 425, 350, 359, 101, 329, 505, 360, 352, 111, 465],
@@ -32,48 +32,24 @@ if "score_data" not in st.session_state:
     st.session_state.score_data = df_init
 
 df = st.session_state.score_data
-
-# Ensure dynamic column header sync
 if p1 not in df.columns or p2 not in df.columns:
     df.columns = ["Hole", "Yards", "Par", "Hcp", p1, p2]
 
-st.subheader("Scorecard")
-
-edited_df = st.data_editor(
-    df,
-    column_config={
-        "Hole": st.column_config.NumberColumn("Hole", disabled=True),
-        "Yards": st.column_config.NumberColumn("Yards", disabled=True),
-        "Par": st.column_config.NumberColumn("Par", disabled=True),
-        "Hcp": st.column_config.NumberColumn("Hcp", disabled=True),
-        p1: st.column_config.NumberColumn(p1, min_value=0, max_value=15, step=1),
-        p2: st.column_config.NumberColumn(p2, min_value=0, max_value=15, step=1),
-    },
-    hide_index=True,
-    use_container_width=True
-)
-
-st.session_state.score_data = edited_df
-
-# --- CALCULATIONS ---
+# --- CALCULATE POINTS ---
 p1_pts = 0
 p2_pts = 0
-p1_gross_tot = 0
-p2_gross_tot = 0
 
-for _, row in edited_df.iterrows():
-    h_hcp = row["Hcp"]
-    g1 = row[p1]
-    g2 = row[p2]
+for _, row in df.iterrows():
+    h_hcp = int(row["Hcp"])
+    g1 = int(row[p1])
+    g2 = int(row[p2])
 
-    # Calculate stroke handicaps per hole
     p1_strokes = 1 if h_hcp <= p1_hcp else 0
     p2_strokes = 1 if h_hcp <= p2_hcp else 0
 
     net1 = g1 - p1_strokes if g1 > 0 else 0
     net2 = g2 - p2_strokes if g2 > 0 else 0
 
-    # Determine hole point value
     if h_hcp <= 6:
         hole_val = 9
     elif h_hcp <= 12:
@@ -81,11 +57,7 @@ for _, row in edited_df.iterrows():
     else:
         hole_val = 3
 
-    # Award points if both players entered gross scores
     if g1 > 0 and g2 > 0:
-        p1_gross_tot += g1
-        p2_gross_tot += g2
-
         if net1 < net2:
             p1_pts += hole_val
         elif net2 < net1:
@@ -94,21 +66,72 @@ for _, row in edited_df.iterrows():
             p1_pts += hole_val // 2
             p2_pts += hole_val // 2
 
+# 2. Points Leaderboard Just Under Title (In Boxes, No Gross Strokes)
+st.divider()
+c1, c2 = st.columns(2)
+with c1:
+    st.markdown(
+        f"""
+        <div style="border: 2px solid #31333F; border-radius: 8px; padding: 12px; text-align: center; background-color: #F0F2F6;">
+            <span style="font-size: 14px; color: #555; font-weight: bold;">{p1}</span><br>
+            <span style="font-size: 28px; font-weight: bold; color: #1E1E1E;">{int(p1_pts)} PTS</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+with c2:
+    st.markdown(
+        f"""
+        <div style="border: 2px solid #31333F; border-radius: 8px; padding: 12px; text-align: center; background-color: #F0F2F6;">
+            <span style="font-size: 14px; color: #555; font-weight: bold;">{p2}</span><br>
+            <span style="font-size: 28px; font-weight: bold; color: #1E1E1E;">{int(p2_pts)} PTS</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 st.divider()
 
-# --- WALKER CUP POINTS LEADERBOARD ---
-st.subheader("🏆 Walker Cup Points Leaderboard")
+# 5. Hole Selector for Quick On-Course Entry
+selected_hole = st.number_input("Select Hole Being Played", min_value=1, max_value=18, step=1, value=1)
+hole_info = df[df["Hole"] == selected_hole].iloc[0]
 
-c1, c2 = st.columns(2)
-c1.metric(label=f"{p1} Points", value=f"{int(p1_pts)} pts", delta=f"{int(p1_gross_tot)} Gross Strokes", delta_color="off")
-c2.metric(label=f"{p2} Points", value=f"{int(p2_pts)} pts", delta=f"{int(p2_gross_tot)} Gross Strokes", delta_color="off")
+hole_hcp = int(hole_info["Hcp"])
+hole_par = int(hole_info["Par"])
+hole_yards = int(hole_info["Yards"])
 
-# Status Banner
-diff = int(p1_pts - p2_pts)
-if p1_gross_tot > 0 and p2_gross_tot > 0:
-    if diff > 0:
-        st.info(f"🚩 **{p1}** leads by **{diff}** point{'s' if diff > 1 else ''}.")
-    elif diff < 0:
-        st.info(f"🚩 **{p2}** leads by **{abs(diff)}** point{'s' if abs(diff) > 1 else ''}.")
-    else:
-        st.info("🤝 The match is currently **Tied**.")
+# 4. Mark in RED when ATN gets a stroke on the hole
+atn_gets_stroke = hole_hcp <= p1_hcp
+stroke_badge = "🔴 <span style='color: red; font-weight: bold;'>(ATN GETS A STROKE)</span>" if atn_gets_stroke else ""
+
+# 3. Hole Details Header (Hole Number, Yardage, Handicap, Par)
+st.markdown(
+    f"#### Hole {selected_hole} &nbsp;|&nbsp; {hole_yards} Yds &nbsp;|&nbsp; Par {hole_par} &nbsp;|&nbsp; Hcp {hole_hcp} {stroke_badge}",
+    unsafe_allow_html=True
+)
+
+# Hole Point Value
+val_text = "9 PTS" if hole_hcp <= 6 else "6 PTS" if hole_hcp <= 12 else "3 PTS"
+st.caption(f"Walker Cup Value: **{val_text}**")
+
+# Score Entry Inputs for Current Hole
+e1, e2 = st.columns(2)
+with e1:
+    curr_p1_score = int(df.loc[df["Hole"] == selected_hole, p1].values[0])
+    new_p1 = st.number_input(f"{p1} Score", min_value=0, max_value=15, value=curr_p1_score, key=f"p1_h{selected_hole}")
+with e2:
+    curr_p2_score = int(df.loc[df["Hole"] == selected_hole, p2].values[0])
+    new_p2 = st.number_input(f"{p2} Score", min_value=0, max_value=15, value=curr_p2_score, key=f"p2_h{selected_hole}")
+
+# Update state on edit
+if new_p1 != curr_p1_score or new_p2 != curr_p2_score:
+    df.loc[df["Hole"] == selected_hole, p1] = new_p1
+    df.loc[df["Hole"] == selected_hole, p2] = new_p2
+    st.session_state.score_data = df
+    st.rerun()
+
+st.divider()
+
+# --- FULL SCORECARD SUMMARY TABLE ---
+with st.expander("📋 View Full Scorecard Table", expanded=False):
+    st.dataframe(df, hide_index=True, use_container_width=True)
