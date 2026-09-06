@@ -71,17 +71,17 @@ for _, row in df.iterrows():
             p1_pts += tie_val
             p2_pts += tie_val
 
-# --- 50px FIXED WIDTH SIDE-BY-SIDE POINTS BOXES ---
+# --- 100px FIXED WIDTH SIDE-BY-SIDE POINTS BOXES ---
 st.markdown(
     f"""
     <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px; margin-bottom: 5px;">
-        <div style="width: 50px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 4px 0px; text-align: center; background-color: transparent;">
-            <span style="font-size: 11px; font-weight: bold;">{p1}</span><br>
-            <span style="font-size: 18px; font-weight: 800; line-height: 1.1;">{int(p1_pts)}</span>
+        <div style="width: 100px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 0px; text-align: center; background-color: transparent;">
+            <span style="font-size: 13px; font-weight: bold;">{p1}</span><br>
+            <span style="font-size: 22px; font-weight: 800; line-height: 1.1;">{int(p1_pts)} PTS</span>
         </div>
-        <div style="width: 50px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 4px 0px; text-align: center; background-color: transparent;">
-            <span style="font-size: 11px; font-weight: bold;">{p2}</span><br>
-            <span style="font-size: 18px; font-weight: 800; line-height: 1.1;">{int(p2_pts)}</span>
+        <div style="width: 100px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 0px; text-align: center; background-color: transparent;">
+            <span style="font-size: 13px; font-weight: bold;">{p2}</span><br>
+            <span style="font-size: 22px; font-weight: 800; line-height: 1.1;">{int(p2_pts)} PTS</span>
         </div>
     </div>
     """,
