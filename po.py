@@ -152,43 +152,32 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- CUSTOM HTML SCORECARD TABLE (STRICT CENTER ALIGNMENT) ---
-def render_custom_table(data_df):
-    html = """
+# --- SCORECARD TABLE (STRICT CENTER ALIGNMENT) ---
+def build_centered_table(data_df):
+    css = """
     <style>
-        .custom-scorecard {
+        .scorecard-table {
             width: 100%;
             border-collapse: collapse;
             font-family: sans-serif;
             margin-top: 10px;
         }
-        .custom-scorecard th {
+        .scorecard-table th {
             text-align: center !important;
             padding: 8px;
-            border-bottom: 2px solid #555;
+            border-bottom: 2px solid #666;
             font-size: 14px;
         }
-        .custom-scorecard td {
+        .scorecard-table td {
             text-align: center !important;
             padding: 8px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #444;
             font-size: 14px;
         }
     </style>
-    <table class="custom-scorecard">
-        <thead>
-            <tr>
-                <th>Hole</th>
-                <th>Yards</th>
-                <th>Par</th>
-                <th>Hcp</th>
-                <th>{}</th>
-                <th>{}</th>
-            </tr>
-        </thead>
-        <tbody>
-    """.format(p1, p2)
-
+    """
+    
+    rows = ""
     for _, row in data_df.iterrows():
         h = int(row["Hole"])
         y = int(row["Yards"])
@@ -197,8 +186,8 @@ def render_custom_table(data_df):
         g1 = int(row[p1])
         g2 = int(row[p2])
 
-        p1_style = "font-weight: bold;"
-        p2_style = "font-weight: bold;"
+        p1_cell = f"<b>{g1}</b>" if g1 > 0 else "-"
+        p2_cell = f"<b>{g2}</b>" if g2 > 0 else "-"
 
         if g1 > 0 and g2 > 0:
             s1 = 1 if hcp <= p1_hcp else 0
@@ -208,32 +197,46 @@ def render_custom_table(data_df):
             net2 = g2 - s2
 
             if net1 < net2:
-                p1_style = "background-color: #D4EDDA; color: #155724; font-weight: bold; border-radius: 4px;"
+                p1_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
             elif net2 < net1:
-                p2_style = "background-color: #D4EDDA; color: #155724; font-weight: bold; border-radius: 4px;"
+                p2_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
             else:
-                p1_style = "background-color: #FFF3CD; color: #856404; font-weight: bold; border-radius: 4px;"
-                p2_style = "background-color: #FFF3CD; color: #856404; font-weight: bold; border-radius: 4px;"
+                p1_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
+                p2_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
 
-        p1_str = str(g1) if g1 > 0 else "-"
-        p2_str = str(g2) if g2 > 0 else "-"
-
-        html += f"""
+        rows += f"""
         <tr>
             <td>{h}</td>
             <td>{y}</td>
             <td>{par}</td>
             <td>{hcp}</td>
-            <td style="{p1_style}">{p1_str}</td>
-            <td style="{p2_style}">{p2_str}</td>
+            <td>{p1_cell}</td>
+            <td>{p2_cell}</td>
         </tr>
         """
 
-    html += "</tbody></table>"
+    html = f"""
+    {css}
+    <table class="scorecard-table">
+        <thead>
+            <tr>
+                <th>Hole</th>
+                <th>Yards</th>
+                <th>Par</th>
+                <th>Hcp</th>
+                <th>{p1}</th>
+                <th>{p2}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {rows}
+        </tbody>
+    </table>
+    """
     return html
 
 with st.expander("📋 View Full Scorecard Table", expanded=False):
-    st.html(render_custom_table(df))
+    st.markdown(build_centered_table(df), unsafe_allow_html=True)
 
 st.divider()
 
