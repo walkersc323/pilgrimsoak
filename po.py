@@ -71,28 +71,22 @@ for _, row in df.iterrows():
             p1_pts += tie_val
             p2_pts += tie_val
 
-# --- 1. SHRUNK SIDE-BY-SIDE POINTS BOXES FOR MOBILE ---
-c1, c2 = st.columns(2)
-with c1:
-    st.markdown(
-        f"""
-        <div style="border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 4px; text-align: center; background-color: transparent;">
-            <span style="font-size: 13px; font-weight: bold;">{p1}</span><br>
-            <span style="font-size: 26px; font-weight: 800; line-height: 1.1;">{int(p1_pts)} PTS</span>
+# --- 50px FIXED WIDTH SIDE-BY-SIDE POINTS BOXES ---
+st.markdown(
+    f"""
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px; margin-bottom: 5px;">
+        <div style="width: 50px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 4px 0px; text-align: center; background-color: transparent;">
+            <span style="font-size: 11px; font-weight: bold;">{p1}</span><br>
+            <span style="font-size: 18px; font-weight: 800; line-height: 1.1;">{int(p1_pts)}</span>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-with c2:
-    st.markdown(
-        f"""
-        <div style="border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 4px; text-align: center; background-color: transparent;">
-            <span style="font-size: 13px; font-weight: bold;">{p2}</span><br>
-            <span style="font-size: 26px; font-weight: 800; line-height: 1.1;">{int(p2_pts)} PTS</span>
+        <div style="width: 50px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 4px 0px; text-align: center; background-color: transparent;">
+            <span style="font-size: 11px; font-weight: bold;">{p2}</span><br>
+            <span style="font-size: 18px; font-weight: 800; line-height: 1.1;">{int(p2_pts)}</span>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 st.divider()
 
@@ -124,7 +118,7 @@ st.write("")
 curr_p1 = int(df.loc[df["Hole"] == selected_hole, p1].values[0])
 curr_p2 = int(df.loc[df["Hole"] == selected_hole, p2].values[0])
 
-# --- 2. COMPACT NUMERIC SCORE ENTRY BOXES ---
+# --- COMPACT NUMERIC SCORE ENTRY BOXES ---
 s_col1, s_col2 = st.columns(2)
 with s_col1:
     new_p1 = st.number_input(
@@ -153,7 +147,7 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- 3. COMPACT MOBILE SCORECARD TABLE ---
+# --- COMPACT MOBILE SCORECARD TABLE ---
 rows_html = ""
 for _, row in df.iterrows():
     h = int(row["Hole"])
