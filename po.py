@@ -152,91 +152,76 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- SCORECARD TABLE (STRICT CENTER ALIGNMENT) ---
-def build_centered_table(data_df):
-    css = """
-    <style>
-        .scorecard-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: sans-serif;
-            margin-top: 10px;
-        }
-        .scorecard-table th {
-            text-align: center !important;
-            padding: 8px;
-            border-bottom: 2px solid #666;
-            font-size: 14px;
-        }
-        .scorecard-table td {
-            text-align: center !important;
-            padding: 8px;
-            border-bottom: 1px solid #444;
-            font-size: 14px;
-        }
-    </style>
-    """
-    
-    rows = ""
-    for _, row in data_df.iterrows():
-        h = int(row["Hole"])
-        y = int(row["Yards"])
-        par = int(row["Par"])
-        hcp = int(row["Hcp"])
-        g1 = int(row[p1])
-        g2 = int(row[p2])
+# --- SCORECARD TABLE (HTML RENDERED VIA st.html) ---
+rows_html = ""
+for _, row in df.iterrows():
+    h = int(row["Hole"])
+    y = int(row["Yards"])
+    par = int(row["Par"])
+    hcp = int(row["Hcp"])
+    g1 = int(row[p1])
+    g2 = int(row[p2])
 
-        p1_cell = f"<b>{g1}</b>" if g1 > 0 else "-"
-        p2_cell = f"<b>{g2}</b>" if g2 > 0 else "-"
+    p1_cell = f"<b>{g1}</b>" if g1 > 0 else "-"
+    p2_cell = f"<b>{g2}</b>" if g2 > 0 else "-"
 
-        if g1 > 0 and g2 > 0:
-            s1 = 1 if hcp <= p1_hcp else 0
-            s2 = 1 if hcp <= p2_hcp else 0
+    if g1 > 0 and g2 > 0:
+        s1 = 1 if hcp <= p1_hcp else 0
+        s2 = 1 if hcp <= p2_hcp else 0
 
-            net1 = g1 - s1
-            net2 = g2 - s2
+        net1 = g1 - s1
+        net2 = g2 - s2
 
-            if net1 < net2:
-                p1_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
-            elif net2 < net1:
-                p2_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
-            else:
-                p1_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
-                p2_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
+        if net1 < net2:
+            p1_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
+        elif net2 < net1:
+            p2_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
+        else:
+            p1_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
+            p2_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
 
-        rows += f"""
+    rows_html += f"<tr><td>{h}</td><td>{y}</td><td>{par}</td><td>{hcp}</td><td>{p1_cell}</td><td>{p2_cell}</td></tr>"
+
+table_code = f"""
+<style>
+    .scorecard-table {{
+        width: 100%;
+        border-collapse: collapse;
+        font-family: sans-serif;
+        margin-top: 10px;
+    }}
+    .scorecard-table th {{
+        text-align: center !important;
+        padding: 8px;
+        border-bottom: 2px solid #666;
+        font-size: 14px;
+    }}
+    .scorecard-table td {{
+        text-align: center !important;
+        padding: 8px;
+        border-bottom: 1px solid #444;
+        font-size: 14px;
+    }}
+</style>
+<table class="scorecard-table">
+    <thead>
         <tr>
-            <td>{h}</td>
-            <td>{y}</td>
-            <td>{par}</td>
-            <td>{hcp}</td>
-            <td>{p1_cell}</td>
-            <td>{p2_cell}</td>
+            <th>Hole</th>
+            <th>Yards</th>
+            <th>Par</th>
+            <th>Hcp</th>
+            <th>{p1}</th>
+            <th>{p2}</th>
         </tr>
-        """
-
-    html = f"""
-    {css}
-    <table class="scorecard-table">
-        <thead>
-            <tr>
-                <th>Hole</th>
-                <th>Yards</th>
-                <th>Par</th>
-                <th>Hcp</th>
-                <th>{p1}</th>
-                <th>{p2}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {rows}
-        </tbody>
-    </table>
-    """
-    return html
+    </thead>
+    <tbody>
+        {rows_html}
+    </tbody>
+</table>
+"""
 
 with st.expander("📋 View Full Scorecard Table", expanded=False):
-    st.markdown(build_centered_table(df), unsafe_allow_html=True)
+    st.html(table_code)
 
 st.divider()
 
