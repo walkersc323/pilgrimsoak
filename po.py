@@ -3,7 +3,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Pilgrim's Oak Round", layout="centered")
 
-# Page Title & Subtitle (Divider & Extra Space Removed)
+# Page Title & Subtitle
 st.markdown("### ⛳ Pilgrim's Oak Round")
 st.caption("White / Gold Tees • Par 72 • 5,828 Yards")
 
@@ -152,47 +152,88 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- FULLY CENTERED STYLED SCORECARD TABLE ---
-def style_scorecard(data_df):
-    style_df = pd.DataFrame("", index=data_df.index, columns=data_df.columns)
-    
-    # Center all cells
-    style_df.loc[:, :] = "text-align: center;"
+# --- CUSTOM HTML SCORECARD TABLE (STRICT CENTER ALIGNMENT) ---
+def render_custom_table(data_df):
+    html = """
+    <style>
+        .custom-scorecard {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: sans-serif;
+            margin-top: 10px;
+        }
+        .custom-scorecard th {
+            text-align: center !important;
+            padding: 8px;
+            border-bottom: 2px solid #555;
+            font-size: 14px;
+        }
+        .custom-scorecard td {
+            text-align: center !important;
+            padding: 8px;
+            border-bottom: 1px solid #333;
+            font-size: 14px;
+        }
+    </style>
+    <table class="custom-scorecard">
+        <thead>
+            <tr>
+                <th>Hole</th>
+                <th>Yards</th>
+                <th>Par</th>
+                <th>Hcp</th>
+                <th>{}</th>
+                <th>{}</th>
+            </tr>
+        </thead>
+        <tbody>
+    """.format(p1, p2)
 
-    for idx, row in data_df.iterrows():
-        h_hcp = int(row["Hcp"])
+    for _, row in data_df.iterrows():
+        h = int(row["Hole"])
+        y = int(row["Yards"])
+        par = int(row["Par"])
+        hcp = int(row["Hcp"])
         g1 = int(row[p1])
         g2 = int(row[p2])
 
-        style_df.loc[idx, p1] = "text-align: center; font-weight: bold;"
-        style_df.loc[idx, p2] = "text-align: center; font-weight: bold;"
+        p1_style = "font-weight: bold;"
+        p2_style = "font-weight: bold;"
 
         if g1 > 0 and g2 > 0:
-            s1 = 1 if h_hcp <= p1_hcp else 0
-            s2 = 1 if h_hcp <= p2_hcp else 0
+            s1 = 1 if hcp <= p1_hcp else 0
+            s2 = 1 if hcp <= p2_hcp else 0
 
             net1 = g1 - s1
             net2 = g2 - s2
 
             if net1 < net2:
-                style_df.loc[idx, p1] = "text-align: center; background-color: #D4EDDA; color: #155724; font-weight: bold; border: 1px solid #C3E6CB;"
+                p1_style = "background-color: #D4EDDA; color: #155724; font-weight: bold; border-radius: 4px;"
             elif net2 < net1:
-                style_df.loc[idx, p2] = "text-align: center; background-color: #D4EDDA; color: #155724; font-weight: bold; border: 1px solid #C3E6CB;"
+                p2_style = "background-color: #D4EDDA; color: #155724; font-weight: bold; border-radius: 4px;"
             else:
-                style_df.loc[idx, p1] = "text-align: center; background-color: #FFF3CD; color: #856404; font-weight: bold; border: 1px solid #FFEEBA;"
-                style_df.loc[idx, p2] = "text-align: center; background-color: #FFF3CD; color: #856404; font-weight: bold; border: 1px solid #FFEEBA;"
+                p1_style = "background-color: #FFF3CD; color: #856404; font-weight: bold; border-radius: 4px;"
+                p2_style = "background-color: #FFF3CD; color: #856404; font-weight: bold; border-radius: 4px;"
 
-    return style_df
+        p1_str = str(g1) if g1 > 0 else "-"
+        p2_str = str(g2) if g2 > 0 else "-"
 
-styled_df = df.style.apply(style_scorecard, axis=None).set_table_styles(
-    [
-        {"selector": "th", "props": [("text-align", "center")]},
-        {"selector": "td", "props": [("text-align", "center")]}
-    ]
-)
+        html += f"""
+        <tr>
+            <td>{h}</td>
+            <td>{y}</td>
+            <td>{par}</td>
+            <td>{hcp}</td>
+            <td style="{p1_style}">{p1_str}</td>
+            <td style="{p2_style}">{p2_str}</td>
+        </tr>
+        """
+
+    html += "</tbody></table>"
+    return html
 
 with st.expander("📋 View Full Scorecard Table", expanded=False):
-    st.dataframe(styled_df, hide_index=True, use_container_width=True)
+    st.html(render_custom_table(df))
 
 st.divider()
 
