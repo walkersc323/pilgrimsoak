@@ -11,11 +11,11 @@ st.caption("White / Gold Tees • Par 72 • 5,828 Yards")
 with st.expander("⚙️ Player Setup & Handicaps", expanded=False):
     col1, col2 = st.columns(2)
     with col1:
-        p1 = st.text_input("Player 1 Name", value="ATN")
-        p1_hcp = st.number_input(f"{p1} Handicap", value=12, min_value=0, max_value=36, step=1)
+        p1 = st.text_input("Player 1 Name", value="SCW")
+        p1_hcp = st.number_input(f"{p1} Handicap", value=0, min_value=0, max_value=36, step=1)
     with col2:
-        p2 = st.text_input("Player 2 Name", value="Player 2")
-        p2_hcp = st.number_input(f"{p2} Handicap", value=0, min_value=0, max_value=36, step=1)
+        p2 = st.text_input("Player 2 Name", value="ATN")
+        p2_hcp = st.number_input(f"{p2} Handicap", value=12, min_value=0, max_value=36, step=1)
 
 # --- COURSE DATA ---
 COURSE_DATA = {
@@ -102,21 +102,21 @@ hole_hcp = int(hole_info["Hcp"])
 hole_par = int(hole_info["Par"])
 hole_yards = int(hole_info["Yards"])
 
-# Determine hole point value for header
+# Determine hole point value for header (Styled in Green)
 if hole_hcp <= 6:
-    hole_pts_str = "9 PTS"
+    hole_pts_str = "<span style='color: green; font-weight: bold;'>9 PTS</span>"
 elif hole_hcp <= 12:
-    hole_pts_str = "6 PTS"
+    hole_pts_str = "<span style='color: green; font-weight: bold;'>6 PTS</span>"
 else:
-    hole_pts_str = "3 PTS"
+    hole_pts_str = "<span style='color: green; font-weight: bold;'>3 PTS</span>"
 
-# Red Stroke Alert
-atn_gets_stroke = hole_hcp <= p1_hcp
+# Red Stroke Alert for ATN
+atn_gets_stroke = hole_hcp <= p2_hcp if p2 == "ATN" else (hole_hcp <= p1_hcp if p1 == "ATN" else False)
 stroke_badge = "🔴 <span style='color: red; font-weight: bold;'>(ATN GETS A STROKE)</span>" if atn_gets_stroke else ""
 
-# 2. Hole Information Line Including Point Value
+# Hole Information Line Including Green Point Value
 st.markdown(
-    f"#### Hole {selected_hole} &nbsp;|&nbsp; {hole_yards} Yds &nbsp;|&nbsp; Par {hole_par} &nbsp;|&nbsp; Hcp {hole_hcp} &nbsp;|&nbsp; **{hole_pts_str}** {stroke_badge}",
+    f"#### Hole {selected_hole} &nbsp;|&nbsp; {hole_yards} Yds &nbsp;|&nbsp; Par {hole_par} &nbsp;|&nbsp; Hcp {hole_hcp} &nbsp;|&nbsp; {hole_pts_str} {stroke_badge}",
     unsafe_allow_html=True
 )
 
@@ -126,7 +126,7 @@ st.write("")
 curr_p1 = int(df.loc[df["Hole"] == selected_hole, p1].values[0])
 curr_p2 = int(df.loc[df["Hole"] == selected_hole, p2].values[0])
 
-# 3. Score Selection Buttons (2 through 8)
+# Score Selection Buttons (2 through 8)
 score_options = [2, 3, 4, 5, 6, 7, 8]
 
 st.markdown(f"**{p1}'s Gross Score:**")
@@ -134,7 +134,6 @@ p1_cols = st.columns(7)
 new_p1 = curr_p1
 
 for idx, val in enumerate(score_options):
-    # Highlight current selection
     button_type = "primary" if curr_p1 == val else "secondary"
     if p1_cols[idx].button(str(val), key=f"p1_btn_{selected_hole}_{val}", type=button_type):
         new_p1 = val
