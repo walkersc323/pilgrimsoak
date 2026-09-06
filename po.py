@@ -152,7 +152,7 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- SCORECARD TABLE (HIGH CONTRAST GREEN/YELLOW BOLD SCORES) ---
+# --- SCORECARD TABLE (HIGH CONTRAST GREEN/YELLOW BOLD SCORES + STROKE ASTERISK) ---
 rows_html = ""
 for _, row in df.iterrows():
     h = int(row["Hole"])
@@ -162,29 +162,34 @@ for _, row in df.iterrows():
     g1 = int(row[p1])
     g2 = int(row[p2])
 
-    p1_cell = f"<span style='font-size:17px; font-weight:bold;'>{g1}</span>" if g1 > 0 else "-"
-    p2_cell = f"<span style='font-size:17px; font-weight:bold;'>{g2}</span>" if g2 > 0 else "-"
+    # Check strokes per hole
+    s1 = 1 if hcp <= p1_hcp else 0
+    s2 = 1 if hcp <= p2_hcp else 0
+
+    # Red asterisk indicator for player stroke holes
+    p1_ast = "<span style='color:#FF4B4B; font-weight:bold;'>*</span>" if s1 > 0 else ""
+    p2_ast = "<span style='color:#FF4B4B; font-weight:bold;'>*</span>" if s2 > 0 else ""
+
+    p1_val_str = f"{g1}{p1_ast}" if g1 > 0 else "-"
+    p2_val_str = f"{g2}{p2_ast}" if g2 > 0 else "-"
+
+    p1_cell = f"<span style='font-size:17px; font-weight:bold;'>{p1_val_str}</span>"
+    p2_cell = f"<span style='font-size:17px; font-weight:bold;'>{p2_val_str}</span>"
 
     if g1 > 0 and g2 > 0:
-        s1 = 1 if hcp <= p1_hcp else 0
-        s2 = 1 if hcp <= p2_hcp else 0
-
         net1 = g1 - s1
         net2 = g2 - s2
 
-        # Vivid Green for Winner, Vivid Yellow for Tie, Both with Black Font
         green_style = "background-color: #28A745; color: #000000; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 18px;"
         yellow_style = "background-color: #FFC107; color: #000000; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 18px;"
 
         if net1 < net2:
-            p1_cell = f"<span style='{green_style}'>{g1}</span>"
-            p2_cell = f"<span style='font-size:17px; font-weight:bold;'>{g2}</span>"
+            p1_cell = f"<span style='{green_style}'>{p1_val_str}</span>"
         elif net2 < net1:
-            p1_cell = f"<span style='font-size:17px; font-weight:bold;'>{g1}</span>"
-            p2_cell = f"<span style='{green_style}'>{g2}</span>"
+            p2_cell = f"<span style='{green_style}'>{p2_val_str}</span>"
         else:
-            p1_cell = f"<span style='{yellow_style}'>{g1}</span>"
-            p2_cell = f"<span style='{yellow_style}'>{g2}</span>"
+            p1_cell = f"<span style='{yellow_style}'>{p1_val_str}</span>"
+            p2_cell = f"<span style='{yellow_style}'>{p2_val_str}</span>"
 
     rows_html += f"<tr><td>{h}</td><td>{y}</td><td>{par}</td><td>{hcp}</td><td>{p1_cell}</td><td>{p2_cell}</td></tr>"
 
