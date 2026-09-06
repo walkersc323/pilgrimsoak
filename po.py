@@ -3,8 +3,8 @@ import pandas as pd
 
 st.set_page_config(page_title="Pilgrim's Oak Round", layout="centered")
 
-# Page Title & Subtitle
-st.markdown("### ⛳ Pilgrim's Oak Round")
+# Page Title & Subtitle (Compact for Mobile)
+st.markdown("<h4 style='margin-bottom:0px;'>⛳ Pilgrim's Oak Round</h4>", unsafe_allow_html=True)
 st.caption("White / Gold Tees • Par 72 • 5,828 Yards")
 
 # --- INITIALIZE PLAYERS & HANDICAPS IN SESSION STATE ---
@@ -71,14 +71,14 @@ for _, row in df.iterrows():
             p1_pts += tie_val
             p2_pts += tie_val
 
-# --- TRANSPARENT POINTS BOXES DIRECTLY BELOW SUBTITLE ---
+# --- 1. SHRUNK SIDE-BY-SIDE POINTS BOXES FOR MOBILE ---
 c1, c2 = st.columns(2)
 with c1:
     st.markdown(
         f"""
-        <div style="border: 2px solid #FFFFFF; border-radius: 8px; padding: 12px; text-align: center; background-color: transparent;">
-            <span style="font-size: 16px; font-weight: bold;">{p1}</span><br>
-            <span style="font-size: 40px; font-weight: 900;">{int(p1_pts)} PTS</span>
+        <div style="border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 4px; text-align: center; background-color: transparent;">
+            <span style="font-size: 13px; font-weight: bold;">{p1}</span><br>
+            <span style="font-size: 26px; font-weight: 800; line-height: 1.1;">{int(p1_pts)} PTS</span>
         </div>
         """,
         unsafe_allow_html=True
@@ -86,9 +86,9 @@ with c1:
 with c2:
     st.markdown(
         f"""
-        <div style="border: 2px solid #FFFFFF; border-radius: 8px; padding: 12px; text-align: center; background-color: transparent;">
-            <span style="font-size: 16px; font-weight: bold;">{p2}</span><br>
-            <span style="font-size: 40px; font-weight: 900;">{int(p2_pts)} PTS</span>
+        <div style="border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 4px; text-align: center; background-color: transparent;">
+            <span style="font-size: 13px; font-weight: bold;">{p2}</span><br>
+            <span style="font-size: 26px; font-weight: 800; line-height: 1.1;">{int(p2_pts)} PTS</span>
         </div>
         """,
         unsafe_allow_html=True
@@ -112,10 +112,10 @@ else:
     hole_pts_str = "<span style='color: green; font-weight: bold;'>3 PTS</span>"
 
 atn_gets_stroke = hole_hcp <= p2_hcp if p2 == "ATN" else (hole_hcp <= p1_hcp if p1 == "ATN" else False)
-stroke_badge = "🔴 <span style='color: red; font-weight: bold;'>(ATN GETS A STROKE)</span>" if atn_gets_stroke else ""
+stroke_badge = "🔴 <span style='color: red; font-weight: bold;'>(ATN GETS STROKE)</span>" if atn_gets_stroke else ""
 
 st.markdown(
-    f"#### Hole {selected_hole} &nbsp;|&nbsp; {hole_yards} Yds &nbsp;|&nbsp; Par {hole_par} &nbsp;|&nbsp; Hcp {hole_hcp} &nbsp;|&nbsp; {hole_pts_str} {stroke_badge}",
+    f"##### Hole {selected_hole} | {hole_yards} Yds | Par {hole_par} | Hcp {hole_hcp} | {hole_pts_str} {stroke_badge}",
     unsafe_allow_html=True
 )
 
@@ -124,25 +124,26 @@ st.write("")
 curr_p1 = int(df.loc[df["Hole"] == selected_hole, p1].values[0])
 curr_p2 = int(df.loc[df["Hole"] == selected_hole, p2].values[0])
 
-score_options = [2, 3, 4, 5, 6, 7, 8]
-
-st.markdown(f"**{p1}'s Gross Score:**")
-p1_cols = st.columns(7)
-new_p1 = curr_p1
-
-for idx, val in enumerate(score_options):
-    button_type = "primary" if curr_p1 == val else "secondary"
-    if p1_cols[idx].button(str(val), key=f"p1_btn_{selected_hole}_{val}", type=button_type):
-        new_p1 = val
-
-st.markdown(f"**{p2}'s Gross Score:**")
-p2_cols = st.columns(7)
-new_p2 = curr_p2
-
-for idx, val in enumerate(score_options):
-    button_type = "primary" if curr_p2 == val else "secondary"
-    if p2_cols[idx].button(str(val), key=f"p2_btn_{selected_hole}_{val}", type=button_type):
-        new_p2 = val
+# --- 2. COMPACT NUMERIC SCORE ENTRY BOXES ---
+s_col1, s_col2 = st.columns(2)
+with s_col1:
+    new_p1 = st.number_input(
+        f"{p1}'s Score", 
+        min_value=0, 
+        max_value=15, 
+        value=curr_p1, 
+        step=1, 
+        key=f"input_p1_h{selected_hole}"
+    )
+with s_col2:
+    new_p2 = st.number_input(
+        f"{p2}'s Score", 
+        min_value=0, 
+        max_value=15, 
+        value=curr_p2, 
+        step=1, 
+        key=f"input_p2_h{selected_hole}"
+    )
 
 if new_p1 != curr_p1 or new_p2 != curr_p2:
     df.loc[df["Hole"] == selected_hole, p1] = new_p1
@@ -152,7 +153,7 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- SCORECARD TABLE (HIGH CONTRAST GREEN/YELLOW BOLD SCORES + RED STROKE DOT) ---
+# --- 3. COMPACT MOBILE SCORECARD TABLE ---
 rows_html = ""
 for _, row in df.iterrows():
     h = int(row["Hole"])
@@ -165,22 +166,21 @@ for _, row in df.iterrows():
     s1 = 1 if hcp <= p1_hcp else 0
     s2 = 1 if hcp <= p2_hcp else 0
 
-    # Solid red dot indicator for stroke holes
-    p1_dot = "<span style='color:#FF4B4B; font-size:12px;'> ●</span>" if s1 > 0 else ""
-    p2_dot = "<span style='color:#FF4B4B; font-size:12px;'> ●</span>" if s2 > 0 else ""
+    p1_dot = "<span style='color:#FF4B4B; font-size:10px;'>●</span>" if s1 > 0 else ""
+    p2_dot = "<span style='color:#FF4B4B; font-size:10px;'>●</span>" if s2 > 0 else ""
 
     p1_val_str = f"{g1}{p1_dot}" if g1 > 0 else "-"
     p2_val_str = f"{g2}{p2_dot}" if g2 > 0 else "-"
 
-    p1_cell = f"<span style='font-size:17px; font-weight:bold;'>{p1_val_str}</span>"
-    p2_cell = f"<span style='font-size:17px; font-weight:bold;'>{p2_val_str}</span>"
+    p1_cell = f"<span style='font-size:14px; font-weight:bold;'>{p1_val_str}</span>"
+    p2_cell = f"<span style='font-size:14px; font-weight:bold;'>{p2_val_str}</span>"
 
     if g1 > 0 and g2 > 0:
         net1 = g1 - s1
         net2 = g2 - s2
 
-        green_style = "background-color: #28A745; color: #000000; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 18px;"
-        yellow_style = "background-color: #FFC107; color: #000000; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 18px;"
+        green_style = "background-color: #28A745; color: #000000; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 14px;"
+        yellow_style = "background-color: #FFC107; color: #000000; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 14px;"
 
         if net1 < net2:
             p1_cell = f"<span style='{green_style}'>{p1_val_str}</span>"
@@ -198,26 +198,26 @@ table_code = f"""
         width: 100%;
         border-collapse: collapse;
         font-family: sans-serif;
-        margin-top: 10px;
+        margin-top: 4px;
     }}
     .scorecard-table th {{
         text-align: center !important;
-        padding: 8px;
+        padding: 4px 2px;
         border-bottom: 2px solid #666;
-        font-size: 15px;
+        font-size: 12px;
     }}
     .scorecard-table td {{
         text-align: center !important;
-        padding: 8px;
+        padding: 4px 2px;
         border-bottom: 1px solid #444;
-        font-size: 15px;
+        font-size: 12px;
     }}
 </style>
 <table class="scorecard-table">
     <thead>
         <tr>
             <th>Hole</th>
-            <th>Yards</th>
+            <th>Yds</th>
             <th>Par</th>
             <th>Hcp</th>
             <th>{p1}</th>
