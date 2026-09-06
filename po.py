@@ -164,12 +164,18 @@ st.divider()
 # --- STYLED SCORECARD TABLE ---
 def style_scorecard(data_df):
     style_df = pd.DataFrame("", index=data_df.index, columns=data_df.columns)
+    
+    # Center all columns by default
     style_df.loc[:, :] = "text-align: center;"
 
     for idx, row in data_df.iterrows():
         h_hcp = int(row["Hcp"])
         g1 = int(row[p1])
         g2 = int(row[p2])
+
+        # Bold player score cells regardless of status
+        style_df.loc[idx, p1] = "text-align: center; font-weight: bold;"
+        style_df.loc[idx, p2] = "text-align: center; font-weight: bold;"
 
         if g1 > 0 and g2 > 0:
             s1 = 1 if h_hcp <= p1_hcp else 0
@@ -179,10 +185,13 @@ def style_scorecard(data_df):
             net2 = g2 - s2
 
             if net1 < net2:
+                # P1 Wins Hole (Green Box)
                 style_df.loc[idx, p1] = "text-align: center; background-color: #D4EDDA; color: #155724; font-weight: bold; border: 1px solid #C3E6CB;"
             elif net2 < net1:
+                # P2 Wins Hole (Green Box)
                 style_df.loc[idx, p2] = "text-align: center; background-color: #D4EDDA; color: #155724; font-weight: bold; border: 1px solid #C3E6CB;"
             else:
+                # Tie (Yellow Box on both scores)
                 style_df.loc[idx, p1] = "text-align: center; background-color: #FFF3CD; color: #856404; font-weight: bold; border: 1px solid #FFEEBA;"
                 style_df.loc[idx, p2] = "text-align: center; background-color: #FFF3CD; color: #856404; font-weight: bold; border: 1px solid #FFEEBA;"
 
