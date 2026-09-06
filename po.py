@@ -1,17 +1,19 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Pilgrim's Oak Match", layout="centered")
+st.set_page_config(page_title="Pilgrim's Oak - Walker Cup Match", layout="centered")
 
-st.title("⛳ Pilgrim's Oak Match")
+st.title("⛳ Pilgrim's Oak - Walker Cup Match")
 st.caption("White / Gold Tees • Par 72 • 5,828 Yards")
 
 # --- MATCH SETUP ---
 col1, col2 = st.columns(2)
 with col1:
-    p1 = st.text_input("Player 1 Name", value="Player 1")
+    p1 = st.text_input("Player 1 Name", value="ATN")
+    p1_hcp = st.number_input(f"{p1} Handicap Strokes", value=12, min_value=0, max_value=36, step=1)
 with col2:
     p2 = st.text_input("Player 2 Name", value="Player 2")
+    p2_hcp = st.number_input(f"{p2} Handicap Strokes", value=0, min_value=0, max_value=36, step=1)
 
 st.divider()
 
@@ -29,12 +31,11 @@ if "score_data" not in st.session_state:
     df_init[p2] = 0
     st.session_state.score_data = df_init
 
-# Handle dynamic player name updates in table headers
 df = st.session_state.score_data
-if p1 not in df.columns:
-    df.columns = ["Hole", "Yards", "Par", "Hcp", p1, df.columns[5]]
-if p2 not in df.columns:
-    df.columns = ["Hole", "Yards", "Par", "Hcp", df.columns[4], p2]
+
+# Ensure dynamic column header sync
+if p1 not in df.columns or p2 not in df.columns:
+    df.columns = ["Hole", "Yards", "Par", "Hcp", p1, p2]
 
 st.subheader("Scorecard")
 
@@ -54,43 +55,60 @@ edited_df = st.data_editor(
 
 st.session_state.score_data = edited_df
 
-# --- CALCULATIONS & LEADERBOARD ---
-p1_played = edited_df[edited_df[p1] > 0]
-p2_played = edited_df[edited_df[p2] > 0]
+# --- CALCULATIONS ---
+p1_pts = 0
+p2_pts = 0
+p1_gross_tot = 0
+p2_gross_tot = 0
 
-p1_total = p1_played[p1].sum()
-p2_total = p2_played[p2].sum()
+for _, row in edited_df.iterrows():
+    h_hcp = row["Hcp"]
+    g1 = row[p1]
+    g2 = row[p2]
 
-p1_par = p1_played["Par"].sum()
-p2_par = p2_played["Par"].sum()
+    # Calculate stroke handicaps per hole
+    p1_strokes = 1 if h_hcp <= p1_hcp else 0
+    p2_strokes = 1 if h_hcp <= p2_hcp else 0
 
-p1_to_par = p1_total - p1_par
-p2_to_par = p2_total - p2_par
+    net1 = g1 - p1_strokes if g1 > 0 else 0
+    net2 = g2 - p2_strokes if g2 > 0 else 0
+
+    # Determine hole point value
+    if h_hcp <= 6:
+        hole_val = 9
+    elif h_hcp <= 12:
+        hole_val = 6
+    else:
+        hole_val = 3
+
+    # Award points if both players entered gross scores
+    if g1 > 0 and g2 > 0:
+        p1_gross_tot += g1
+        p2_gross_tot += g2
+
+        if net1 < net2:
+            p1_pts += hole_val
+        elif net2 < net1:
+            p2_pts += hole_val
+        else:
+            p1_pts += hole_val // 2
+            p2_pts += hole_val // 2
 
 st.divider()
-st.subheader("Leaderboard")
 
-m1, m2 = st.columns(2)
+# --- WALKER CUP POINTS LEADERBOARD ---
+st.subheader("🏆 Walker Cup Points Leaderboard")
 
-def format_score(to_par, total):
-    if total == 0:
-        return "E", "0 strokes"
-    sign = "+" if to_par > 0 else ""
-    str_to_par = "E" if to_par == 0 else f"{sign}{int(to_par)}"
-    return str_to_par, f"{int(total)} strokes"
+c1, c2 = st.columns(2)
+c1.metric(label=f"{p1} Points", value=f"{int(p1_pts)} pts", delta=f"{int(p1_gross_tot)} Gross Strokes", delta_color="off")
+c2.metric(label=f"{p2} Points", value=f"{int(p2_pts)} pts", delta=f"{int(p2_gross_tot)} Gross Strokes", delta_color="off")
 
-p1_str, p1_sub = format_score(p1_to_par, p1_total)
-p2_str, p2_sub = format_score(p2_to_par, p2_total)
-
-m1.metric(label=p1, value=p1_str, delta=p1_sub, delta_color="off")
-m2.metric(label=p2, value=p2_str, delta=p2_sub, delta_color="off")
-
-# Match Leaderboard Summary
-if len(p1_played) > 0 and len(p2_played) > 0:
-    diff = int(p1_total - p2_total)
-    if diff < 0:
-        st.info(f"🏆 **{p1}** leads by **{abs(diff)}** stroke{'s' if abs(diff) > 1 else ''}.")
-    elif diff > 0:
-        st.info(f"🏆 **{p2}** leads by **{diff}** stroke{'s' if diff > 1 else ''}.")
+# Status Banner
+diff = int(p1_pts - p2_pts)
+if p1_gross_tot > 0 and p2_gross_tot > 0:
+    if diff > 0:
+        st.info(f"🚩 **{p1}** leads by **{diff}** point{'s' if diff > 1 else ''}.")
+    elif diff < 0:
+        st.info(f"🚩 **{p2}** leads by **{abs(diff)}** point{'s' if abs(diff) > 1 else ''}.")
     else:
         st.info("🤝 The match is currently **Tied**.")
