@@ -152,7 +152,7 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- SCORECARD TABLE (HTML RENDERED VIA st.html) ---
+# --- SCORECARD TABLE (HIGH CONTRAST GREEN/YELLOW BOLD SCORES) ---
 rows_html = ""
 for _, row in df.iterrows():
     h = int(row["Hole"])
@@ -162,8 +162,8 @@ for _, row in df.iterrows():
     g1 = int(row[p1])
     g2 = int(row[p2])
 
-    p1_cell = f"<b>{g1}</b>" if g1 > 0 else "-"
-    p2_cell = f"<b>{g2}</b>" if g2 > 0 else "-"
+    p1_cell = f"<span style='font-size:17px; font-weight:bold;'>{g1}</span>" if g1 > 0 else "-"
+    p2_cell = f"<span style='font-size:17px; font-weight:bold;'>{g2}</span>" if g2 > 0 else "-"
 
     if g1 > 0 and g2 > 0:
         s1 = 1 if hcp <= p1_hcp else 0
@@ -172,13 +172,19 @@ for _, row in df.iterrows():
         net1 = g1 - s1
         net2 = g2 - s2
 
+        # Vivid Green for Winner, Vivid Yellow for Tie, Both with Black Font
+        green_style = "background-color: #28A745; color: #000000; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 18px;"
+        yellow_style = "background-color: #FFC107; color: #000000; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 18px;"
+
         if net1 < net2:
-            p1_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
+            p1_cell = f"<span style='{green_style}'>{g1}</span>"
+            p2_cell = f"<span style='font-size:17px; font-weight:bold;'>{g2}</span>"
         elif net2 < net1:
-            p2_cell = f"<span style='background-color:#D4EDDA; color:#155724; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
+            p1_cell = f"<span style='font-size:17px; font-weight:bold;'>{g1}</span>"
+            p2_cell = f"<span style='{green_style}'>{g2}</span>"
         else:
-            p1_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g1}</span>"
-            p2_cell = f"<span style='background-color:#FFF3CD; color:#856404; padding:4px 8px; border-radius:4px; font-weight:bold;'>{g2}</span>"
+            p1_cell = f"<span style='{yellow_style}'>{g1}</span>"
+            p2_cell = f"<span style='{yellow_style}'>{g2}</span>"
 
     rows_html += f"<tr><td>{h}</td><td>{y}</td><td>{par}</td><td>{hcp}</td><td>{p1_cell}</td><td>{p2_cell}</td></tr>"
 
@@ -194,13 +200,13 @@ table_code = f"""
         text-align: center !important;
         padding: 8px;
         border-bottom: 2px solid #666;
-        font-size: 14px;
+        font-size: 15px;
     }}
     .scorecard-table td {{
         text-align: center !important;
         padding: 8px;
         border-bottom: 1px solid #444;
-        font-size: 14px;
+        font-size: 15px;
     }}
 </style>
 <table class="scorecard-table">
