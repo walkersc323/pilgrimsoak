@@ -3,7 +3,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Pilgrim's Oak Round", layout="centered")
 
-# Page Title
+# Page Title & Subtitle (Divider & Extra Space Removed)
 st.markdown("### ⛳ Pilgrim's Oak Round")
 st.caption("White / Gold Tees • Par 72 • 5,828 Yards")
 
@@ -55,7 +55,6 @@ for _, row in df.iterrows():
     net1 = g1 - p1_strokes if g1 > 0 else 0
     net2 = g2 - p2_strokes if g2 > 0 else 0
 
-    # Determine hole point value & tie value
     if h_hcp <= 6:
         win_val, tie_val = 9, 3
     elif h_hcp <= 12:
@@ -63,7 +62,6 @@ for _, row in df.iterrows():
     else:
         win_val, tie_val = 3, 1
 
-    # Award points when both scores are entered
     if g1 > 0 and g2 > 0:
         if net1 < net2:
             p1_pts += win_val
@@ -73,8 +71,7 @@ for _, row in df.iterrows():
             p1_pts += tie_val
             p2_pts += tie_val
 
-# --- TRANSPARENT POINTS BOXES WITH WHITE BORDER & LARGER FONT ---
-st.divider()
+# --- TRANSPARENT POINTS BOXES DIRECTLY BELOW SUBTITLE ---
 c1, c2 = st.columns(2)
 with c1:
     st.markdown(
@@ -107,7 +104,6 @@ hole_hcp = int(hole_info["Hcp"])
 hole_par = int(hole_info["Par"])
 hole_yards = int(hole_info["Yards"])
 
-# Determine hole point value for header (Styled in Green)
 if hole_hcp <= 6:
     hole_pts_str = "<span style='color: green; font-weight: bold;'>9 PTS</span>"
 elif hole_hcp <= 12:
@@ -115,11 +111,9 @@ elif hole_hcp <= 12:
 else:
     hole_pts_str = "<span style='color: green; font-weight: bold;'>3 PTS</span>"
 
-# Red Stroke Alert for ATN
 atn_gets_stroke = hole_hcp <= p2_hcp if p2 == "ATN" else (hole_hcp <= p1_hcp if p1 == "ATN" else False)
 stroke_badge = "🔴 <span style='color: red; font-weight: bold;'>(ATN GETS A STROKE)</span>" if atn_gets_stroke else ""
 
-# Hole Information Line
 st.markdown(
     f"#### Hole {selected_hole} &nbsp;|&nbsp; {hole_yards} Yds &nbsp;|&nbsp; Par {hole_par} &nbsp;|&nbsp; Hcp {hole_hcp} &nbsp;|&nbsp; {hole_pts_str} {stroke_badge}",
     unsafe_allow_html=True
@@ -127,11 +121,9 @@ st.markdown(
 
 st.write("")
 
-# Current Scores in State
 curr_p1 = int(df.loc[df["Hole"] == selected_hole, p1].values[0])
 curr_p2 = int(df.loc[df["Hole"] == selected_hole, p2].values[0])
 
-# Score Selection Buttons (2 through 8)
 score_options = [2, 3, 4, 5, 6, 7, 8]
 
 st.markdown(f"**{p1}'s Gross Score:**")
@@ -152,7 +144,6 @@ for idx, val in enumerate(score_options):
     if p2_cols[idx].button(str(val), key=f"p2_btn_{selected_hole}_{val}", type=button_type):
         new_p2 = val
 
-# Save updates to session state
 if new_p1 != curr_p1 or new_p2 != curr_p2:
     df.loc[df["Hole"] == selected_hole, p1] = new_p1
     df.loc[df["Hole"] == selected_hole, p2] = new_p2
@@ -161,11 +152,11 @@ if new_p1 != curr_p1 or new_p2 != curr_p2:
 
 st.divider()
 
-# --- STYLED SCORECARD TABLE ---
+# --- FULLY CENTERED STYLED SCORECARD TABLE ---
 def style_scorecard(data_df):
     style_df = pd.DataFrame("", index=data_df.index, columns=data_df.columns)
     
-    # Center all columns by default
+    # Center all cells
     style_df.loc[:, :] = "text-align: center;"
 
     for idx, row in data_df.iterrows():
@@ -173,7 +164,6 @@ def style_scorecard(data_df):
         g1 = int(row[p1])
         g2 = int(row[p2])
 
-        # Bold player score cells regardless of status
         style_df.loc[idx, p1] = "text-align: center; font-weight: bold;"
         style_df.loc[idx, p2] = "text-align: center; font-weight: bold;"
 
@@ -185,20 +175,20 @@ def style_scorecard(data_df):
             net2 = g2 - s2
 
             if net1 < net2:
-                # P1 Wins Hole (Green Box)
                 style_df.loc[idx, p1] = "text-align: center; background-color: #D4EDDA; color: #155724; font-weight: bold; border: 1px solid #C3E6CB;"
             elif net2 < net1:
-                # P2 Wins Hole (Green Box)
                 style_df.loc[idx, p2] = "text-align: center; background-color: #D4EDDA; color: #155724; font-weight: bold; border: 1px solid #C3E6CB;"
             else:
-                # Tie (Yellow Box on both scores)
                 style_df.loc[idx, p1] = "text-align: center; background-color: #FFF3CD; color: #856404; font-weight: bold; border: 1px solid #FFEEBA;"
                 style_df.loc[idx, p2] = "text-align: center; background-color: #FFF3CD; color: #856404; font-weight: bold; border: 1px solid #FFEEBA;"
 
     return style_df
 
 styled_df = df.style.apply(style_scorecard, axis=None).set_table_styles(
-    [{"selector": "th", "props": [("text-align", "center")]}]
+    [
+        {"selector": "th", "props": [("text-align", "center")]},
+        {"selector": "td", "props": [("text-align", "center")]}
+    ]
 )
 
 with st.expander("📋 View Full Scorecard Table", expanded=False):
@@ -206,7 +196,7 @@ with st.expander("📋 View Full Scorecard Table", expanded=False):
 
 st.divider()
 
-# --- PLAYER SETUP & HANDICAPS (MOVED TO BOTTOM) ---
+# --- PLAYER SETUP & HANDICAPS (AT BOTTOM) ---
 with st.expander("⚙️ Player Setup & Handicaps", expanded=False):
     col1, col2 = st.columns(2)
     with col1:
