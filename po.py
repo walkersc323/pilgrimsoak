@@ -91,15 +91,21 @@ for _, row in df.iterrows():
             p1_pts += tie_val
             p2_pts += tie_val
 
-# --- POINTS BOXES ---
+# --- DYNAMIC LEADER HIGHLIGHT FOR POINTS BOXES ---
+style_default = "background-color: transparent; color: #FFFFFF; border: 1.5px solid #FFFFFF;"
+style_leader = "background-color: #28A745; color: #000000; border: 1.5px solid #28A745;"
+
+p1_box_style = style_leader if (p1_pts > p2_pts and p1_pts > 0) else style_default
+p2_box_style = style_leader if (p2_pts > p1_pts and p2_pts > 0) else style_default
+
 st.markdown(
     f"""
     <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px; margin-bottom: 5px;">
-        <div style="width: 100px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 0px; text-align: center; background-color: transparent;">
+        <div style="width: 100px; border-radius: 6px; padding: 6px 0px; text-align: center; {p1_box_style}">
             <span style="font-size: 13px; font-weight: bold;">{p1}</span><br>
             <span style="font-size: 22px; font-weight: 800; line-height: 1.1;">{int(p1_pts)} PTS</span>
         </div>
-        <div style="width: 100px; border: 1.5px solid #FFFFFF; border-radius: 6px; padding: 6px 0px; text-align: center; background-color: transparent;">
+        <div style="width: 100px; border-radius: 6px; padding: 6px 0px; text-align: center; {p2_box_style}">
             <span style="font-size: 13px; font-weight: bold;">{p2}</span><br>
             <span style="font-size: 22px; font-weight: 800; line-height: 1.1;">{int(p2_pts)} PTS</span>
         </div>
@@ -285,7 +291,6 @@ horizontal_table_code = f"""
 </div>
 """
 
-# Render table directly on page
 st.html(horizontal_table_code)
 
 st.divider()
