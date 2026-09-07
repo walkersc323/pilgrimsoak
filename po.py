@@ -1,9 +1,14 @@
 import streamlit as st
 import pandas as pd
+import json
+import os
+import io
 
 st.set_page_config(page_title="Pilgrim's Oak Round", layout="centered")
 
-# Page Title & Subtitle (Compact for Mobile)
+SAVE_FILE = "scores_backup.json"
+
+# Page Title & Subtitle
 st.markdown("<h4 style='margin-bottom:0px;'>⛳ Pilgrim's Oak Round</h4>", unsafe_allow_html=True)
 st.caption("White / Gold Tees • Par 72 • 5,828 Yards")
 
@@ -30,11 +35,26 @@ COURSE_DATA = {
     "Hcp": [11, 5, 9, 17, 15, 13, 3, 7, 1, 16, 4, 6, 8, 12, 10, 18, 14, 2]
 }
 
-if "score_data" not in st.session_state:
+# --- PERSISTENCE FUNCTIONS ---
+def load_saved_data():
+    if os.path.exists(SAVE_FILE):
+        try:
+            with open(SAVE_FILE, "r") as f:
+                saved_dict = json.load(f)
+                return pd.DataFrame(saved_dict)
+        except Exception:
+            pass
     df_init = pd.DataFrame(COURSE_DATA)
     df_init[p1] = 0
     df_init[p2] = 0
-    st.session_state.score_data = df_init
+    return df_init
+
+def save_data(df_to_save):
+    with open(SAVE_FILE, "w") as f:
+        json.dump(df_to_save.to_dict(), f)
+
+if "score_data" not in st.session_state:
+    st.session_state.score_data = load_saved_data()
 
 df = st.session_state.score_data
 if p1 not in df.columns or p2 not in df.columns:
@@ -71,7 +91,7 @@ for _, row in df.iterrows():
             p1_pts += tie_val
             p2_pts += tie_val
 
-# --- 100px FIXED WIDTH SIDE-BY-SIDE POINTS BOXES ---
+# --- POINTS BOXES ---
 st.markdown(
     f"""
     <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px; margin-bottom: 5px;">
@@ -118,34 +138,49 @@ st.write("")
 curr_p1 = int(df.loc[df["Hole"] == selected_hole, p1].values[0])
 curr_p2 = int(df.loc[df["Hole"] == selected_hole, p2].values[0])
 
-# --- COMPACT NUMERIC SCORE ENTRY BOXES ---
-s_col1, s_col2 = st.columns(2)
-with s_col1:
-    new_p1 = st.number_input(
-        f"{p1}'s Score", 
-        min_value=0, 
-        max_value=15, 
-        value=curr_p1, 
-        step=1, 
-        key=f"input_p1_h{selected_hole}"
-    )
-with s_col2:
-    new_p2 = st.number_input(
-        f"{p2}'s Score", 
-        min_value=0, 
-        max_value=15, 
-        value=curr_p2, 
-        step=1, 
-        key=f"input_p2_h{selected_hole}"
-    )
+# --- SCORE ENTRY FORM WITH SUBMIT BUTTON ---
+with st.form(key=f"hole_form_{selected_hole}"):
+    s_col1, s_col2 = st.columns(2)
+    with s_col1:
+        entered_p1 = st.number_input(f"{p1}'s Score", min_value=0, max_value=15, value=curr_p1, step=1)
+    with s_col2:
+        entered_p2 = st.number_input(f"{p2}'s Score", min_value=0, max_value=15, value=curr_p2, step=1)
+    
+    submit_hole = st.form_submit_button("✅ Submit Hole Scores", use_container_width=True)
 
-if new_p1 != curr_p1 or new_p2 != curr_p2:
-    df.loc[df["Hole"] == selected_hole, p1] = new_p1
-    df.loc[df["Hole"] == selected_hole, p2] = new_p2
+if submit_hole:
+    df.loc[df["Hole"] == selected_hole, p1] = entered_p1
+    df.loc[df["Hole"] == selected_hole, p2] = entered_p2
     st.session_state.score_data = df
+    save_data(df)
+    st.success(f"Hole {selected_hole} scores saved!")
     st.rerun()
 
 st.divider()
+
+# --- CHECK FOR 18-HOLE COMPLETION & EXCEL DOWNLOAD ---
+completed_holes = df[(df[p1] > 0) & (df[p2] > 0)]
+all_18_done = len(completed_holes) == 18
+
+if all_18_done:
+    st.balloons()
+    st.success("🎉 All 18 Holes Completed!")
+    
+    # Generate Excel File in Memory
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name="Match Scorecard")
+    
+    excel_data = buffer.getvalue()
+    
+    st.download_button(
+        label="📥 Download Final Match Spreadsheet (.xlsx)",
+        data=excel_data,
+        file_name="pilgrims_oak_final_scorecard.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True
+    )
+    st.divider()
 
 # --- COMPACT MOBILE SCORECARD TABLE ---
 rows_html = ""
@@ -229,7 +264,18 @@ with st.expander("📋 View Full Scorecard Table", expanded=False):
 
 st.divider()
 
-# --- PLAYER SETUP & HANDICAPS (AT BOTTOM) ---
+# --- RESET ROUND BUTTON & PLAYER SETUP ---
+b_col1, b_col2 = st.columns(2)
+with b_col1:
+    if st.button("🔄 Reset Round Scores", use_container_width=True):
+        if os.path.exists(SAVE_FILE):
+            os.remove(SAVE_FILE)
+        df_reset = pd.DataFrame(COURSE_DATA)
+        df_reset[p1] = 0
+        df_reset[p2] = 0
+        st.session_state.score_data = df_reset
+        st.rerun()
+
 with st.expander("⚙️ Player Setup & Handicaps", expanded=False):
     col1, col2 = st.columns(2)
     with col1:
