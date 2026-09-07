@@ -181,7 +181,7 @@ if all_18_done:
     )
     st.divider()
 
-# --- HORIZONTAL SCORECARD TABLE ---
+# --- ALWAYS-VISIBLE HORIZONTAL SCORECARD TABLE ---
 hole_cells = ""
 pts_cells = ""
 p1_cells = ""
@@ -199,7 +199,6 @@ for _, row in df.iterrows():
     s1 = 1 if hcp <= p1_hcp else 0
     s2 = 1 if hcp <= p2_hcp else 0
 
-    # Point value calculation
     hole_pts = 9 if hcp <= 6 else (6 if hcp <= 12 else 3)
 
     p1_dot = "<span style='color:#FF4B4B; font-size:9px;'>●</span>" if s1 > 0 else ""
@@ -286,8 +285,8 @@ horizontal_table_code = f"""
 </div>
 """
 
-with st.expander("📋 View Full Scorecard Table", expanded=False):
-    st.html(horizontal_table_code)
+# Render table directly on page
+st.html(horizontal_table_code)
 
 st.divider()
 
