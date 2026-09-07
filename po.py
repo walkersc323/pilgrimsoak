@@ -166,7 +166,6 @@ if all_18_done:
     st.balloons()
     st.success("🎉 All 18 Holes Completed!")
     
-    # Generate Excel File in Memory
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name="Match Scorecard")
@@ -182,12 +181,17 @@ if all_18_done:
     )
     st.divider()
 
-# --- COMPACT MOBILE SCORECARD TABLE ---
-rows_html = ""
+# --- HORIZONTAL SCORECARD TABLE ---
+hole_cells = ""
+pts_cells = ""
+p1_cells = ""
+p2_cells = ""
+
+green_style = "background-color: #28A745; color: #000000; padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 13px;"
+yellow_style = "background-color: #FFC107; color: #000000; padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 13px;"
+
 for _, row in df.iterrows():
     h = int(row["Hole"])
-    y = int(row["Yards"])
-    par = int(row["Par"])
     hcp = int(row["Hcp"])
     g1 = int(row[p1])
     g2 = int(row[p2])
@@ -195,72 +199,95 @@ for _, row in df.iterrows():
     s1 = 1 if hcp <= p1_hcp else 0
     s2 = 1 if hcp <= p2_hcp else 0
 
-    p1_dot = "<span style='color:#FF4B4B; font-size:10px;'>●</span>" if s1 > 0 else ""
-    p2_dot = "<span style='color:#FF4B4B; font-size:10px;'>●</span>" if s2 > 0 else ""
+    # Point value calculation
+    hole_pts = 9 if hcp <= 6 else (6 if hcp <= 12 else 3)
+
+    p1_dot = "<span style='color:#FF4B4B; font-size:9px;'>●</span>" if s1 > 0 else ""
+    p2_dot = "<span style='color:#FF4B4B; font-size:9px;'>●</span>" if s2 > 0 else ""
 
     p1_val_str = f"{g1}{p1_dot}" if g1 > 0 else "-"
     p2_val_str = f"{g2}{p2_dot}" if g2 > 0 else "-"
 
-    p1_cell = f"<span style='font-size:14px; font-weight:bold;'>{p1_val_str}</span>"
-    p2_cell = f"<span style='font-size:14px; font-weight:bold;'>{p2_val_str}</span>"
+    p1_formatted = f"<span style='font-size:13px; font-weight:bold;'>{p1_val_str}</span>"
+    p2_formatted = f"<span style='font-size:13px; font-weight:bold;'>{p2_val_str}</span>"
 
     if g1 > 0 and g2 > 0:
         net1 = g1 - s1
         net2 = g2 - s2
 
-        green_style = "background-color: #28A745; color: #000000; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 14px;"
-        yellow_style = "background-color: #FFC107; color: #000000; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 14px;"
-
         if net1 < net2:
-            p1_cell = f"<span style='{green_style}'>{p1_val_str}</span>"
+            p1_formatted = f"<span style='{green_style}'>{p1_val_str}</span>"
         elif net2 < net1:
-            p2_cell = f"<span style='{green_style}'>{p2_val_str}</span>"
+            p2_formatted = f"<span style='{green_style}'>{p2_val_str}</span>"
         else:
-            p1_cell = f"<span style='{yellow_style}'>{p1_val_str}</span>"
-            p2_cell = f"<span style='{yellow_style}'>{p2_val_str}</span>"
+            p1_formatted = f"<span style='{yellow_style}'>{p1_val_str}</span>"
+            p2_formatted = f"<span style='{yellow_style}'>{p2_val_str}</span>"
 
-    rows_html += f"<tr><td>{h}</td><td>{y}</td><td>{par}</td><td>{hcp}</td><td>{p1_cell}</td><td>{p2_cell}</td></tr>"
+    hole_cells += f"<td>{h}</td>"
+    pts_cells += f"<td>{hole_pts}</td>"
+    p1_cells += f"<td>{p1_formatted}</td>"
+    p2_cells += f"<td>{p2_formatted}</td>"
 
-table_code = f"""
+horizontal_table_code = f"""
 <style>
-    .scorecard-table {{
+    .horizontal-scorecard-container {{
         width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 5px;
+    }}
+    .horizontal-scorecard {{
         border-collapse: collapse;
         font-family: sans-serif;
-        margin-top: 4px;
+        white-space: nowrap;
+        margin: 0 auto;
     }}
-    .scorecard-table th {{
+    .horizontal-scorecard th {{
         text-align: center !important;
-        padding: 4px 2px;
+        padding: 6px 8px;
         border-bottom: 2px solid #666;
+        border-right: 1px solid #444;
         font-size: 12px;
+        background-color: #262730;
+        position: sticky;
+        left: 0;
+        z-index: 2;
     }}
-    .scorecard-table td {{
+    .horizontal-scorecard td {{
         text-align: center !important;
-        padding: 4px 2px;
+        padding: 6px 8px;
         border-bottom: 1px solid #444;
+        border-right: 1px solid #333;
         font-size: 12px;
+        min-width: 32px;
     }}
 </style>
-<table class="scorecard-table">
-    <thead>
-        <tr>
-            <th>Hole</th>
-            <th>Yds</th>
-            <th>Par</th>
-            <th>Hcp</th>
-            <th>{p1}</th>
-            <th>{p2}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {rows_html}
-    </tbody>
-</table>
+<div class="horizontal-scorecard-container">
+    <table class="horizontal-scorecard">
+        <tbody>
+            <tr>
+                <th>Hole</th>
+                {hole_cells}
+            </tr>
+            <tr>
+                <th>Points</th>
+                {pts_cells}
+            </tr>
+            <tr>
+                <th>{p1}</th>
+                {p1_cells}
+            </tr>
+            <tr>
+                <th>{p2}</th>
+                {p2_cells}
+            </tr>
+        </tbody>
+    </table>
+</div>
 """
 
 with st.expander("📋 View Full Scorecard Table", expanded=False):
-    st.html(table_code)
+    st.html(horizontal_table_code)
 
 st.divider()
 
